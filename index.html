@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0f1a">
+<title>Прятки</title>
+<style>
+:root{--bg:#0b0f1a;--panel:#151b2b;--line:#273049;--fg:#eef1f8;--mute:#8d97b3;--amb:#f4c542;--teal:#4fd6c1;--ac:var(--amb);color-scheme:dark;
+--f:"Avenir Next Condensed","Arial Narrow","Roboto Condensed",system-ui,sans-serif}
+@media (prefers-color-scheme:light){:root{--bg:#f3f1ec;--panel:#fff;--line:#d9d5ca;--fg:#14172a;--mute:#6a6f85;--amb:#c98a00;--teal:#0f8c7c}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,sans-serif}
+body{padding:calc(env(safe-area-inset-top,0px) + 14px) 18px calc(env(safe-area-inset-bottom,0px) + 18px);display:flex;flex-direction:column;max-width:480px;margin:0 auto}
+header{display:flex;align-items:center;justify-content:space-between;min-height:36px;margin-bottom:10px}
+.back{background:none;border:0;color:var(--mute);font-size:16px;padding:8px 0;width:auto;margin:0}
+.pill{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mute)}
+.dot{width:10px;height:10px;border-radius:50%;background:#e5484d}
+.dot.ok{background:#3ddc84;box-shadow:0 0 10px #3ddc84}
+.dot.mid{background:var(--amb)}
+h1{font:800 40px/1 var(--f);margin:6px 0 8px;letter-spacing:.5px}
+.sub{color:var(--mute);margin:0 0 20px;line-height:1.4}
+section{display:none;flex:1;flex-direction:column}
+section.on{display:flex}
+button{font:700 18px var(--f);letter-spacing:.3px;width:100%;padding:16px;margin:6px 0;border-radius:16px;border:1px solid var(--line);background:var(--panel);color:var(--fg)}
+button:active{transform:scale(.98)}
+button:focus-visible,textarea:focus-visible{outline:3px solid var(--ac);outline-offset:2px}
+button.main{background:var(--ac);color:#111;border:0}
+button:disabled{opacity:.4}
+.role{text-align:left;padding:22px 20px;margin:0 0 14px;border:0;position:relative;overflow:hidden;min-height:170px;display:flex;flex-direction:column;justify-content:flex-end}
+.role b{font:800 38px/1 var(--f);display:block}
+.role span{font:400 15px/1.35 system-ui;opacity:.85;margin-top:6px;display:block}
+.role.s{background:var(--amb);color:#1a1400}.role.h{background:var(--teal);color:#06231f}
+.role svg{position:absolute;right:-20px;top:-20px;opacity:.25}
+.steps{display:flex;flex-direction:column;gap:14px}
+.st{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:14px}
+.st.off{opacity:.45;pointer-events:none}
+.st h3{margin:0 0 8px;font:700 18px var(--f);display:flex;align-items:center;gap:10px}
+.n{width:26px;height:26px;border-radius:50%;background:var(--ac);color:#111;display:grid;place-items:center;font-size:14px}
+.st.done .n{background:#3ddc84}
+textarea{width:100%;height:64px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--fg);padding:10px;font:12px monospace;resize:none}
+.row{display:flex;gap:10px}.row button{margin:6px 0}
+.times button{font-size:28px;padding:22px}
+.ringbox{position:relative;width:min(78vw,320px);aspect-ratio:1;margin:18px auto}
+.ringbox svg{width:100%;height:100%}
+.ringbox .c{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.ringbox .c b{font:800 84px/1 var(--f)}
+.ringbox .c small{display:block;color:var(--mute);font-size:15px}
+.slot{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:6px 0}
+.slot i{font:800 20px var(--f);width:34px;height:34px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-style:normal}
+.slot.ok i{background:var(--amb);border-color:var(--amb);color:#111}
+.slot div{flex:1;min-width:0}.slot b{display:block;font-size:15px}.slot small{color:var(--mute);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.slot input{position:absolute;opacity:0;width:1px;height:1px}
+.slot label{padding:8px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--line);font-weight:600;font-size:14px}
+.rad circle{fill:none;stroke:var(--line);stroke-width:3;transition:.25s}
+.rad .on{stroke:var(--amb);fill:rgba(244,197,66,.12)}
+.rad .core{fill:var(--amb);stroke:none}
+.rad.p3 .core{animation:pu .5s infinite alternate}.rad.p2 .core{animation:pu 1s infinite alternate}.rad.p1 .core{animation:pu 1.8s infinite alternate}
+@keyframes pu{to{r:16}}
+.phase{text-align:center;font:800 30px var(--f);margin:2px 0 8px;min-height:36px}
+.jump button{padding:12px;font-size:16px}
+.big button{padding:26px 10px;font-size:24px}
+.hint{color:var(--mute);font-size:13px;text-align:center;margin-top:auto;padding-top:10px}
+.both{--ac:var(--amb)}.hmode{--ac:var(--teal)}
+@media (prefers-reduced-motion:reduce){.rad .core{animation:none!important}}
+</style></head><body>
+
+<header><button class="back" id="bk" onclick="back()" style="visibility:hidden">‹ Назад</button>
+<div class="pill"><span class="dot" id="dt"></span><span id="st">Нет связи</span></div></header>
+
+<section id="menu" class="on">
+<h1>Прятки</h1><p class="sub">Выбери, кем играешь. Связь между телефонами работает без интернета.</p>
+<button class="role s" onclick="pick('seek')"><svg width="170" height="170" viewBox="0 0 170 170"><circle cx="85" cy="85" r="30" fill="none" stroke="#000" stroke-width="8"/><circle cx="85" cy="85" r="60" fill="none" stroke="#000" stroke-width="8"/><circle cx="85" cy="85" r="82" fill="none" stroke="#000" stroke-width="8"/></svg><b>SEEKING</b><span>Ищешь. Музыка подскажет, насколько ты близко.</span></button>
+<button class="role h" onclick="pick('hide')"><svg width="170" height="170" viewBox="0 0 170 170"><path d="M20 150 L85 20 L150 150Z" fill="none" stroke="#000" stroke-width="8"/></svg><b>HIDER</b><span>Прячешься. Выбери время и беги.</span></button>
+</section>
+
+<section id="link">
+<h1 id="lt"></h1><p class="sub">Телефоны должны быть в одной сети, например в раздаче Wi-Fi.</p>
+<div class="steps" id="hs">
+<div class="st" id="h1"><h3><span class="n">1</span>Отправь код искателю</h3><button onclick="mkOffer()">Создать код</button><textarea id="o" readonly placeholder="Здесь появится код"></textarea><button onclick="cp('o',this)">Скопировать</button></div>
+<div class="st off" id="h2"><h3><span class="n">2</span>Вставь его ответ</h3><textarea id="a" placeholder="Ответ искателя"></textarea><button class="main" onclick="setAns()">Подключить</button></div></div>
+<div class="steps" id="ss">
+<div class="st" id="s1"><h3><span class="n">1</span>Вставь код HIDER</h3><textarea id="i" placeholder="Код от HIDER"></textarea><button onclick="mkAns()">Создать ответ</button></div>
+<div class="st off" id="s2"><h3><span class="n">2</span>Отправь ответ HIDER</h3><textarea id="r" readonly placeholder="Здесь появится ответ"></textarea><button class="main" onclick="cp('r',this)">Скопировать</button></div></div>
+</section>
+
+<section id="hider" class="hmode">
+<h1>Время спрятаться</h1><p class="sub" id="hsub">Музыка у искателя начнётся, когда таймер закончится.</p>
+<div class="times" id="tb"><button onclick="hideT(10)">10 сек</button><button onclick="hideT(30)">30 сек</button><button onclick="hideT(60)">1 минута</button></div>
+<div class="ringbox hide" id="rb" style="display:none"><svg viewBox="0 0 200 200"><circle cx="100" cy="100" r="90" fill="none" stroke="var(--line)" stroke-width="10"/><circle id="arc" cx="100" cy="100" r="90" fill="none" stroke="var(--teal)" stroke-width="10" stroke-linecap="round" transform="rotate(-90 100 100)" stroke-dasharray="565.5" stroke-dashoffset="0" style="transition:stroke-dashoffset 1s linear"/></svg><div class="c"><div><b id="tm"></b><small id="tl">секунд</small></div></div></div>
+</section>
+
+<section id="seeker">
+<div id="setup"><h1>Музыка</h1><p class="sub">Выбери трек для каждой фазы. Чем ближе к HIDER, тем выше фаза.</p>
+<div class="slot" id="sl1"><i>1</i><div><b>Далеко</b><small id="n1">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(1,this)"></label></div>
+<div class="slot" id="sl2"><i>2</i><div><b>Ближе</b><small id="n2">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(2,this)"></label></div>
+<div class="slot" id="sl3"><i>3</i><div><b>Рядом</b><small id="n3">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(3,this)"></label></div>
+<p class="sub" id="wt" style="margin-top:18px">Ждём, пока HIDER спрячется…</p></div>
+<div id="play" style="display:none">
+<svg class="rad p0" id="rad" viewBox="0 0 200 200" style="width:min(70vw,280px);display:block;margin:6px auto"><circle id="c3" cx="100" cy="100" r="92"/><circle id="c2" cx="100" cy="100" r="62"/><circle id="c1" cx="100" cy="100" r="32"/><circle class="core" cx="100" cy="100" r="10"/></svg>
+<div class="phase" id="pn">Тишина</div>
+<div class="row big"><button onclick="ph(p-1)">Дальше</button><button class="main" onclick="ph(p+1)">Ближе</button></div>
+<div class="row jump"><button onclick="ph(0)">Тишина</button><button onclick="ph(1)">1</button><button onclick="ph(2)">2</button><button onclick="ph(3)">3</button></div>
+<p class="hint">Расстояние браузер не измеряет, поэтому фазу ставишь сам.</p></div>
+</section>
+
+<script>
+const $=id=>document.getElementById(id);
+let role,pc,dc,p=0,aud={},ready=false,wl;
+function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==id));$('bk').style.visibility=id=='menu'||id=='hider'||id=='seeker'?'hidden':'visible';document.body.className=role=='hide'?'hmode':'both'}
+function stat(t,c){$('st').textContent=t;$('dt').className='dot '+c}
+function back(){try{pc.close()}catch(e){}role=null;stat('Нет связи','');show('menu')}
+function pick(r){role=r;show('link');$('lt').textContent=r=='hide'?'Подключение HIDER':'Подключение SEEKING';$('hs').style.display=r=='hide'?'flex':'none';$('ss').style.display=r=='hide'?'none':'flex';document.body.className=r=='hide'?'hmode':'both';
+ pc=new RTCPeerConnection({iceServers:[]});
+ pc.onconnectionstatechange=()=>{const s=pc.connectionState;stat(s=='connected'?'Подключено':s=='failed'||s=='disconnected'?'Связь потеряна':'Подключаемся…',s=='connected'?'ok':s=='failed'||s=='disconnected'?'':'mid');if(s=='connected')go()};
+ if(r=='seek')pc.ondatachannel=e=>{dc=e.channel;bind()}}
+function wait(){return new Promise(res=>{if(pc.iceGatheringState=='complete')return res();pc.onicegatheringstatechange=()=>pc.iceGatheringState=='complete'&&res()})}
+function stp(a,b){$(a).classList.add('done');$(a).classList.remove('off');if(b){$(b).classList.remove('off')}}
+async function mkOffer(){dc=pc.createDataChannel('g');bind();await pc.setLocalDescription(await pc.createOffer());await wait();$('o').value=btoa(JSON.stringify(pc.localDescription));$('h2').classList.remove('off')}
+async function setAns(){try{await pc.setRemoteDescription(JSON.parse(atob($('a').value.trim())));stat('Подключаемся…','mid')}catch(e){alert('Код не подошёл. Скопируй его целиком и вставь ещё раз.')}}
+async function mkAns(){try{await pc.setRemoteDescription(JSON.parse(atob($('i').value.trim())));await pc.setLocalDescription(await pc.createAnswer());await wait();$('r').value=btoa(JSON.stringify(pc.localDescription));stp('s1','s2')}catch(e){alert('Код не подошёл. Скопируй его целиком и вставь ещё раз.')}}
+function cp(id,b){const t=$(id);if(!t.value)return;t.select();navigator.clipboard&&navigator.clipboard.writeText(t.value);const o=b.textContent;b.textContent='Скопировано';setTimeout(()=>b.textContent=o,1500)}
+function bind(){dc.onmessage=e=>{const m=JSON.parse(e.data);
+ if(m.t=='start'){$('wt').textContent='HIDER прячется: '+m.s+' сек. Музыка начнётся после таймера.'}
+ if(m.t=='go'){ready=true;$('setup').style.display='none';$('play').style.display='block';ph(1);if(navigator.vibrate)navigator.vibrate([200,100,200])}}}
+async function go(){show(role=='hide'?'hider':'seeker');try{wl=await navigator.wakeLock.request('screen')}catch(e){}}
+function hideT(s){$('tb').style.display='none';$('rb').style.display='block';$('hsub').textContent='Беги прятаться. Экран не выключится.';dc.send(JSON.stringify({t:'start',s}));let n=s;$('tm').textContent=n;
+ const arc=$('arc');setTimeout(()=>arc.style.strokeDashoffset=565.5,50);arc.style.transitionDuration=s+'s';
+ const i=setInterval(()=>{n--;$('tm').textContent=n>0?n:'0';if(n<=0){clearInterval(i);$('tl').textContent='ищут!';$('hsub').textContent='Время вышло. Сиди тихо.';if(navigator.vibrate)navigator.vibrate(400);dc.send(JSON.stringify({t:'go'}))}},1000)}
+function ld(n,inp){const f=inp.files[0];if(!f)return;if(aud[n])aud[n].pause();const a=new Audio(URL.createObjectURL(f));a.loop=true;aud[n]=a;$('n'+n).textContent=f.name;$('sl'+n).classList.add('ok')}
+function ph(n){if(!ready)return;const old=p;p=Math.max(0,Math.min(3,n));for(const k in aud){aud[k].pause();aud[k].currentTime=0}
+ if(p&&aud[p])aud[p].play();
+ $('pn').textContent=p?'Фаза '+p+(p>old?' · ближе':p<old?' · дальше':''):'Тишина';
+ $('rad').setAttribute('class','rad p'+p);for(let k=1;k<=3;k++)$('c'+k).classList.toggle('on',k<=p);
+ if(p&&!aud[p])$('pn').textContent+=' (нет трека)';
+ if(navigator.vibrate&&p!=old)navigator.vibrate(40)}
+</script></body></html>
