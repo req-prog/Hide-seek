@@ -53,10 +53,10 @@ textarea{width:100%;height:64px;border-radius:12px;border:1px solid var(--line);
 .rad circle{fill:none;stroke:var(--line);stroke-width:3;transition:.25s}
 .rad .on{stroke:var(--amb);fill:rgba(244,197,66,.12)}
 .rad .core{fill:var(--amb);stroke:none}
-.rad.p3 .core{animation:pu .5s infinite alternate}.rad.p2 .core{animation:pu 1s infinite alternate}.rad.p1 .core{animation:pu 1.8s infinite alternate}
+.rad.p4 .core{animation:pu .3s infinite alternate}.rad.p3 .core{animation:pu .5s infinite alternate}.rad.p2 .core{animation:pu 1s infinite alternate}.rad.p1 .core{animation:pu 1.8s infinite alternate}
 @keyframes pu{to{r:16}}
 .phase{text-align:center;font:800 30px var(--f);margin:2px 0 8px;min-height:36px}
-.jump button{padding:12px;font-size:16px}
+.jump button{padding:12px;font-size:16px}.dist{text-align:center;color:var(--mute);font-size:15px;margin-bottom:6px}.rng{display:flex;align-items:center;gap:12px;color:var(--mute);font-size:14px;margin:6px 0 10px}.rng input{flex:1;accent-color:var(--amb)}
 .big button{padding:26px 10px;font-size:24px}
 .hint{color:var(--mute);font-size:13px;text-align:center;margin-top:auto;padding-top:10px}
 .both{--ac:var(--amb)}.hmode{--ac:var(--teal)}
@@ -89,22 +89,40 @@ textarea{width:100%;height:64px;border-radius:12px;border:1px solid var(--line);
 </section>
 
 <section id="seeker">
-<div id="setup"><h1>Музыка</h1><p class="sub">Выбери трек для каждой фазы. Чем ближе к HIDER, тем выше фаза.</p>
+<div id="setup"><h1>Музыка</h1><p class="sub">Чем ближе к HIDER, тем выше фаза.</p>
+<div class="row"><button class="main" id="m0" onclick="setMode(0)">Свои файлы</button><button id="m1" onclick="setMode(1)">MJOKE</button></div>
+<div id="mjb" style="display:none"><div class="slot" id="slM"><i>♪</i><div><b>MJOKE.mp3</b><small id="nM">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ldM(this)"></label></div><p class="sub">4 фазы из одного трека: 0:00–0:10, 0:10–0:19, 0:19–0:29, 0:29–1:43. Фаза 4 играет по кругу.</p></div>
+<div id="own">
 <div class="slot" id="sl1"><i>1</i><div><b>Далеко</b><small id="n1">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(1,this)"></label></div>
 <div class="slot" id="sl2"><i>2</i><div><b>Ближе</b><small id="n2">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(2,this)"></label></div>
 <div class="slot" id="sl3"><i>3</i><div><b>Рядом</b><small id="n3">Файл не выбран</small></div><label>Выбрать<input type="file" accept="audio/*" onchange="ld(3,this)"></label></div>
-<p class="sub" id="wt" style="margin-top:18px">Ждём, пока HIDER спрячется…</p></div>
+</div><p class="sub" id="wt" style="margin-top:18px">Ждём, пока HIDER спрячется…</p></div>
 <div id="play" style="display:none">
-<svg class="rad p0" id="rad" viewBox="0 0 200 200" style="width:min(70vw,280px);display:block;margin:6px auto"><circle id="c3" cx="100" cy="100" r="92"/><circle id="c2" cx="100" cy="100" r="62"/><circle id="c1" cx="100" cy="100" r="32"/><circle class="core" cx="100" cy="100" r="10"/></svg>
+<svg class="rad p0" id="rad" viewBox="0 0 200 200" style="width:min(70vw,280px);display:block;margin:6px auto"><circle id="c4" cx="100" cy="100" r="92"/><circle id="c3" cx="100" cy="100" r="70"/><circle id="c2" cx="100" cy="100" r="48"/><circle id="c1" cx="100" cy="100" r="26"/><circle class="core" cx="100" cy="100" r="10"/></svg>
 <div class="phase" id="pn">Тишина</div>
+<div class="dist" id="ds">Ждём GPS…</div>
+<button id="au" class="main" onclick="auto=!auto;updAu()">Авто: вкл</button>
+<label class="rng">Радиус фаз<input type="range" id="sc" min="0.5" max="3" step="0.1" value="1"></label>
 <div class="row big"><button onclick="ph(p-1)">Дальше</button><button class="main" onclick="ph(p+1)">Ближе</button></div>
-<div class="row jump"><button onclick="ph(0)">Тишина</button><button onclick="ph(1)">1</button><button onclick="ph(2)">2</button><button onclick="ph(3)">3</button></div>
-<p class="hint">Расстояние браузер не измеряет, поэтому фазу ставишь сам.</p></div>
+<div class="row jump"><button onclick="ph(0)">Тишина</button><button onclick="ph(1)">1</button><button onclick="ph(2)">2</button><button onclick="ph(3)">3</button><button id="j4" onclick="ph(4)" style="display:none">4</button></div>
+<p class="hint">Расстояние считается по GPS обоих телефонов. На улице точнее, в помещении GPS сильно врёт.</p></div>
 </section>
 
 <script>
 const $=id=>document.getElementById(id);
-let role,pc,dc,p=0,aud={},ready=false,wl;
+let role,pc,dc,p=0,aud={},ready=false,wl,mj=false,mja=null,hp=null,me=null,auto=true,hist=[];
+const T=[50,30,15,6];
+function hv(a,b){const R=6371000,r=x=>x*Math.PI/180,dl=r(b.la-a.la),dn=r(b.lo-a.lo),h=Math.sin(dl/2)**2+Math.cos(r(a.la))*Math.cos(r(b.la))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+function gpsMsg(t){const e=$(role=='hide'?'hsub':'ds');if(e)e.textContent=t}
+function startGps(){if(!navigator.geolocation){gpsMsg('GPS недоступен в этом браузере');return}
+ navigator.geolocation.watchPosition(pos=>{const c=pos.coords;me={la:c.latitude,lo:c.longitude,ac:c.accuracy};if(role=='hide'){if(dc&&dc.readyState=='open')dc.send(JSON.stringify({t:'pos',la:me.la,lo:me.lo,ac:me.ac}))}else upd()},()=>gpsMsg('Нет доступа к геолокации. Разреши её в настройках браузера.'),{enableHighAccuracy:true,maximumAge:1000,timeout:15000})}
+function upd(){if(!me||!hp)return;hist.push(hv(me,hp));if(hist.length>3)hist.shift();const a=hist.reduce((x,y)=>x+y)/hist.length;$('ds').textContent=Math.round(a)+' м · точность ±'+Math.round(me.ac+hp.ac)+' м';
+ if(!auto||!ready)return;const k=+$('sc').value;let t=0;T.forEach(x=>{if(a<=x*k)t++});t=Math.min(t,mj?4:3);if(t<p&&p>0&&a<=T[p-1]*k+3)t=p;if(t!==p)ph(t,1)}
+function updAu(){$('au').textContent='Авто: '+(auto?'вкл':'выкл');$('au').className=auto?'main':'';if(auto)upd()}
+const SEG=[null,[0,10],[10,19],[19,29],[29,103]];
+setInterval(()=>{if(mj&&mja&&p){const s=SEG[p];if(mja.currentTime>=s[1]||mja.ended){mja.currentTime=s[0];mja.play()}}},100);
+function ldM(inp){const f=inp.files[0];if(!f)return;if(mja)mja.pause();mja=new Audio(URL.createObjectURL(f));$('nM').textContent=f.name;$('slM').classList.add('ok')}
+function setMode(m){mj=!!m;$('mjb').style.display=m?'block':'none';$('own').style.display=m?'none':'block';$('m0').className=m?'':'main';$('m1').className=m?'main':'';$('j4').style.display=m?'':'none'}
 function show(id){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==id));$('bk').style.visibility=id=='menu'||id=='hider'||id=='seeker'?'hidden':'visible';document.body.className=role=='hide'?'hmode':'both'}
 function stat(t,c){$('st').textContent=t;$('dt').className='dot '+c}
 function back(){try{pc.close()}catch(e){}role=null;stat('Нет связи','');show('menu')}
@@ -118,18 +136,18 @@ async function mkOffer(){dc=pc.createDataChannel('g');bind();await pc.setLocalDe
 async function setAns(){try{await pc.setRemoteDescription(JSON.parse(atob($('a').value.trim())));stat('Подключаемся…','mid')}catch(e){alert('Код не подошёл. Скопируй его целиком и вставь ещё раз.')}}
 async function mkAns(){try{await pc.setRemoteDescription(JSON.parse(atob($('i').value.trim())));await pc.setLocalDescription(await pc.createAnswer());await wait();$('r').value=btoa(JSON.stringify(pc.localDescription));stp('s1','s2')}catch(e){alert('Код не подошёл. Скопируй его целиком и вставь ещё раз.')}}
 function cp(id,b){const t=$(id);if(!t.value)return;t.select();navigator.clipboard&&navigator.clipboard.writeText(t.value);const o=b.textContent;b.textContent='Скопировано';setTimeout(()=>b.textContent=o,1500)}
-function bind(){dc.onmessage=e=>{const m=JSON.parse(e.data);
+function bind(){dc.onmessage=e=>{const m=JSON.parse(e.data);if(m.t=='pos'){hp=m;upd();return}
  if(m.t=='start'){$('wt').textContent='HIDER прячется: '+m.s+' сек. Музыка начнётся после таймера.'}
- if(m.t=='go'){ready=true;$('setup').style.display='none';$('play').style.display='block';ph(1);if(navigator.vibrate)navigator.vibrate([200,100,200])}}}
-async function go(){show(role=='hide'?'hider':'seeker');try{wl=await navigator.wakeLock.request('screen')}catch(e){}}
+ if(m.t=='go'){ready=true;$('setup').style.display='none';$('play').style.display='block';ph(1,1);if(navigator.vibrate)navigator.vibrate([200,100,200])}}}
+async function go(){show(role=='hide'?'hider':'seeker');startGps();try{wl=await navigator.wakeLock.request('screen')}catch(e){}}
 function hideT(s){$('tb').style.display='none';$('rb').style.display='block';$('hsub').textContent='Беги прятаться. Экран не выключится.';dc.send(JSON.stringify({t:'start',s}));let n=s;$('tm').textContent=n;
  const arc=$('arc');setTimeout(()=>arc.style.strokeDashoffset=565.5,50);arc.style.transitionDuration=s+'s';
  const i=setInterval(()=>{n--;$('tm').textContent=n>0?n:'0';if(n<=0){clearInterval(i);$('tl').textContent='ищут!';$('hsub').textContent='Время вышло. Сиди тихо.';if(navigator.vibrate)navigator.vibrate(400);dc.send(JSON.stringify({t:'go'}))}},1000)}
 function ld(n,inp){const f=inp.files[0];if(!f)return;if(aud[n])aud[n].pause();const a=new Audio(URL.createObjectURL(f));a.loop=true;aud[n]=a;$('n'+n).textContent=f.name;$('sl'+n).classList.add('ok')}
-function ph(n){if(!ready)return;const old=p;p=Math.max(0,Math.min(3,n));for(const k in aud){aud[k].pause();aud[k].currentTime=0}
- if(p&&aud[p])aud[p].play();
+function ph(n,a){if(!ready)return;if(!a&&auto){auto=false;updAu()}const old=p;p=Math.max(0,Math.min(mj?4:3,n));for(const k in aud){aud[k].pause();aud[k].currentTime=0}if(mja)mja.pause();
+ if(p&&mj&&mja){mja.currentTime=SEG[p][0];mja.play()}else if(p&&!mj&&aud[p])aud[p].play();
  $('pn').textContent=p?'Фаза '+p+(p>old?' · ближе':p<old?' · дальше':''):'Тишина';
- $('rad').setAttribute('class','rad p'+p);for(let k=1;k<=3;k++)$('c'+k).classList.toggle('on',k<=p);
- if(p&&!aud[p])$('pn').textContent+=' (нет трека)';
+ $('rad').setAttribute('class','rad p'+p);for(let k=1;k<=4;k++)$('c'+k).classList.toggle('on',k<=p);
+ if(p&&(mj?!mja:!aud[p]))$('pn').textContent+=' (нет трека)';
  if(navigator.vibrate&&p!=old)navigator.vibrate(40)}
 </script></body></html>
